@@ -22,7 +22,7 @@
     }
     /* Just a bit of spacing for the sections */
     .section {
-      margin-bottom: 2rem;
+      margin-bottom: 2rem;  
     }
     .form-label {
       font-weight: 600;
@@ -95,6 +95,9 @@
       <button class="btn btn-custom" onclick="setExample('mainnetEth')">
         Onramp 10 EUR via Revolut to Mainnet ETH
       </button>
+      <button class="btn btn-custom" style="margin-top: 1rem;`" onclick="setExample('avalancheUsdc')">
+        Onramp 10 USD to Avalanche USDC
+      </button>
     </div>
   </div>
 
@@ -148,6 +151,10 @@
         <label for="recipientAddress">recipientAddress:</label>
         <input type="text" class="form-control" id="recipientAddress" value="">
       </div>
+      <div class="form-row">
+        <label for="baseUrl">baseUrl:</label>
+        <input type="text" class="form-control" id="baseUrl" value="https://zkp2p.xyz/swap">
+      </div>
     </div>
     <div style="display: flex; justify-content: center; width: 100%; margin-top: 2rem;">
       <button class="btn btn-custom" onclick="goToZkp2p()">
@@ -169,7 +176,7 @@
       inputAmount: "",
       paymentPlatform: "",
       amountUsdc: "",
-      toToken: "Base ETH",
+      toToken: "8453:0x0000000000000000000000000000000000000000",
       recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929"
     },
     solana: {
@@ -181,7 +188,7 @@
       inputAmount: "10",
       paymentPlatform: "",
       amountUsdc: "",
-      toToken: "SOL",
+      toToken: "792703809:11111111111111111111111111111111",
       recipientAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
     },
     mainnetEth: {
@@ -193,7 +200,19 @@
       inputAmount: "10",
       paymentPlatform: "revolut",
       amountUsdc: "",
-      toToken: "ETH",
+      toToken: "1:0x0000000000000000000000000000000000000000",
+      recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929"
+    },
+    avalancheUsdc: {
+      // Onramp 10 USD to Avalanche USDC
+      referrer: "Rampy Pay",
+      referrerLogo: "https://demo.zkp2p.xyz/Rampy_logo.svg",
+      callbackUrl: "https://demo.zkp2p.xyz",
+      inputCurrency: "USD",
+      inputAmount: "10",
+      paymentPlatform: "",
+      amountUsdc: "",
+      toToken: "43114:0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
       recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929"
     },
     exactUsdc: {
@@ -228,7 +247,8 @@
 
   // Gather all query parameters from the inputs and redirect to zkp2p
   function goToZkp2p() {
-    const baseUrl = "https://zkp2p.xyz/swap";
+    // const baseUrl = "https://zkp2p.xyz/swap";
+    const baseUrl = document.getElementById("baseUrl").value.trim() || "https://zkp2p.xyz/swap";
     
     const fields = [
       "referrer",
