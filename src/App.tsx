@@ -12,14 +12,15 @@ import { Button, ButtonRow } from '@components/common/Button';
 declare global {
   interface Window {
     peer?: {
-      requestConnect: () => Promise<{ connected: boolean; address?: string }>;
+      requestConnection: () => Promise<boolean>;
+      checkConnectionStatus: () => Promise<string>;
       onramp: (queryString: string) => void;
     };
   }
 }
 
 // Chrome extension store URL for PeerAuth
-const PEERAUTH_EXTENSION_URL = 'https://chromewebstore.google.com/detail/peerauth/jnlhkbkpojfngaiaghlfpcfkpfnfdodn';
+const PEERAUTH_EXTENSION_URL = 'https://chromewebstore.google.com/detail/peerauth-authenticate-and/ijpgccednehjpeclfcllnjjcmiohdjih';
 
 interface FormData {
   referrer: string;
@@ -32,6 +33,17 @@ interface FormData {
   toToken: string;
   recipientAddress: string;
 }
+
+const disconnectedStatuses = new Set([
+  'disconnected',
+]);
+
+const isConnectedStatus = (status: string | null) => {
+  if (!status) return false;
+  const normalized = status.trim().toLowerCase();
+  if (!normalized) return false;
+  return !disconnectedStatuses.has(normalized);
+};
 
 // Predefined examples
 const examples: Record<string, FormData> = {
@@ -107,7 +119,7 @@ const App: React.FC = () => {
 
   const [extensionStatus, setExtensionStatus] = useState<'checking' | 'installed' | 'not_installed'>('checking');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   // Check if PeerAuth extension is installed
@@ -124,6 +136,36 @@ const App: React.FC = () => {
     const timer = setTimeout(checkExtension, 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Poll connection status while the extension is available
+  useEffect(() => {
+    if (extensionStatus !== 'installed') {
+      setConnectionStatus('');
+      return;
+    }
+
+    let isActive = true;
+    const pollConnectionStatus = async () => {
+      if (!window.peer?.checkConnectionStatus) return;
+      try {
+        const status = await window.peer.checkConnectionStatus();
+        if (isActive) {
+          setConnectionStatus(status ?? '');
+        }
+      } catch {
+        if (isActive) {
+          setConnectionStatus('');
+        }
+      }
+    };
+
+    pollConnectionStatus();
+    const interval = setInterval(pollConnectionStatus, 1500);
+    return () => {
+      isActive = false;
+      clearInterval(interval);
+    };
+  }, [extensionStatus]);
 
   const handleInputChange = useCallback((field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }));
@@ -154,6 +196,23 @@ const App: React.FC = () => {
     return params.length ? `?${params.join("&")}` : "";
   }, [formData]);
 
+  const waitForConnection = useCallback(async () => {
+    if (!window.peer?.checkConnectionStatus) return false;
+    const timeoutMs = 15000;
+    const start = Date.now();
+
+    while (Date.now() - start < timeoutMs) {
+      const status = await window.peer.checkConnectionStatus();
+      setConnectionStatus(status ?? '');
+      if (isConnectedStatus(status ?? '')) {
+        return true;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    return false;
+  }, []);
+
   // Handle the onramp flow with PeerAuth extension
   const handleOnramp = useCallback(async () => {
     setError(null);
@@ -167,17 +226,27 @@ const App: React.FC = () => {
     setIsConnecting(true);
 
     try {
-      // Request connection if not already connected
-      if (!connectedAddress) {
-        const result = await window.peer.requestConnect();
-        if (!result.connected) {
+      let status = '';
+      try {
+        status = await window.peer.checkConnectionStatus();
+        setConnectionStatus(status ?? '');
+      } catch {
+        setConnectionStatus('');
+      }
+      const alreadyConnected = isConnectedStatus(status ?? '');
+
+      if (!alreadyConnected) {
+        const approved = await window.peer.requestConnection();
+        if (!approved) {
           setError('Connection was rejected. Please approve the connection request.');
-          setIsConnecting(false);
           return;
         }
-        if (result.address) {
-          setConnectedAddress(result.address);
-        }
+      }
+
+      const connected = alreadyConnected || (await waitForConnection());
+      if (!connected) {
+        setError('Connection is still pending. Please approve the extension request and try again.');
+        return;
       }
 
       // Call onramp with query params
@@ -188,14 +257,14 @@ const App: React.FC = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, [connectedAddress, buildQueryString]);
+  }, [buildQueryString, waitForConnection]);
 
   // Get button text based on state
   const getButtonText = () => {
     if (extensionStatus === 'checking') return 'Checking extension...';
     if (extensionStatus === 'not_installed') return 'Install PeerAuth Extension';
     if (isConnecting) return 'Connecting...';
-    if (connectedAddress) return 'Onramp with ZKP2P';
+    if (isConnectedStatus(connectionStatus)) return 'Onramp with ZKP2P';
     return 'Connect & Onramp';
   };
 
@@ -206,23 +275,16 @@ const App: React.FC = () => {
           <HeaderSection>
             <Logo src="/Rampy_logo.svg" alt="Rampy Logo" />
             <ThemedText.Hero>Rampy Demo Wallet</ThemedText.Hero>
-            <ThemedText.BodySecondary style={{ textAlign: 'center', maxWidth: '600px', marginTop: '8px' }}>
+            <ThemedText.BodySecondary style={{ textAlign: 'center', maxWidth: '600px', marginTop: '6px' }}>
               This page demonstrates integration with ZKP2P via the PeerAuth extension.
               Select an example or customize the query parameters below.
             </ThemedText.BodySecondary>
           </HeaderSection>
 
-          {/* Extension Status */}
-          <StatusBadge status={extensionStatus}>
-            {extensionStatus === 'checking' && 'Checking for PeerAuth extension...'}
-            {extensionStatus === 'installed' && (connectedAddress ? `Connected: ${connectedAddress.slice(0, 6)}...${connectedAddress.slice(-4)}` : 'PeerAuth extension detected')}
-            {extensionStatus === 'not_installed' && 'PeerAuth extension not detected'}
-          </StatusBadge>
-
           {/* Examples Section */}
           <Section>
             <ThemedText.HeadlineSmall>Examples</ThemedText.HeadlineSmall>
-            <ButtonRow>
+            <ExampleButtons>
               <Button variant="secondary" onClick={() => setExample('baseEth')}>
                 Onramp to Base ETH
               </Button>
@@ -238,7 +300,7 @@ const App: React.FC = () => {
               <Button variant="secondary" onClick={() => setExample('exactUsdc')}>
                 Onramp Exact 1 USDC
               </Button>
-            </ButtonRow>
+            </ExampleButtons>
           </Section>
 
           <Divider />
@@ -331,67 +393,52 @@ const App: React.FC = () => {
 
 // Styled Components
 const AppContainer = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: ${colors.container};
   display: flex;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 32px 20px 28px;
+
+  @media (max-height: 800px) {
+    padding: 24px 16px 20px;
+  }
 `;
 
 const ContentWrapper = styled(ColumnCenter)`
-  max-width: 800px;
+  max-width: 960px;
   width: 100%;
-  gap: 32px;
+  gap: 24px;
+
+  @media (max-height: 800px) {
+    gap: 16px;
+  }
 `;
 
 const HeaderSection = styled(ColumnCenter)`
-  gap: 12px;
-  margin-bottom: 16px;
-`;
-
-const Logo = styled.img`
-  height: 80px;
+  gap: 8px;
   margin-bottom: 8px;
 `;
 
-const StatusBadge = styled.div<{ status: 'checking' | 'installed' | 'not_installed' }>`
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  background-color: ${({ status }) => {
-    switch (status) {
-      case 'installed': return colors.validGreen + '20';
-      case 'not_installed': return colors.warningYellow + '20';
-      default: return colors.backgroundSecondary;
-    }
-  }};
-  color: ${({ status }) => {
-    switch (status) {
-      case 'installed': return colors.validGreen;
-      case 'not_installed': return colors.warningYellow;
-      default: return colors.textSecondary;
-    }
-  }};
-  border: 1px solid ${({ status }) => {
-    switch (status) {
-      case 'installed': return colors.validGreen + '40';
-      case 'not_installed': return colors.warningYellow + '40';
-      default: return colors.defaultBorderColor;
-    }
-  }};
+const Logo = styled.img`
+  height: 64px;
+  margin-bottom: 4px;
 `;
 
 const Section = styled(Column)`
   width: 100%;
-  gap: 16px;
+  gap: 12px;
 `;
 
 const Divider = styled.hr`
   width: 100%;
   border: none;
   border-top: 1px solid ${colors.defaultBorderColor};
-  margin: 8px 0;
+  margin: 4px 0;
+`;
+
+const ExampleButtons = styled(ButtonRow)`
+  margin-top: 8px;
+  gap: 10px;
 `;
 
 const FormGrid = styled.div`
@@ -403,11 +450,15 @@ const FormGrid = styled.div`
   @media (min-width: 640px) {
     grid-template-columns: 1fr 1fr;
   }
+
+  @media (min-width: 960px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 `;
 
 const CTARow = styled(Row)`
   justify-content: center;
-  margin-top: 16px;
+  margin-top: 10px;
 `;
 
 const ErrorMessage = styled.div`
