@@ -1,32 +1,33 @@
 Goal (incl. success criteria):
-- Update PeerAuth flow to use `checkConnectionStatus` (poll until connected), adjust button text/behavior, remove extension status section, and tighten layout to fit on one page without pushing CTA offscreen.
+- Use the panda JPG as the app icon (favicon) and ensure branding says "PeerPanda Wallet".
 
 Constraints/Assumptions:
-- Use `frontend-design` skill guidance.
-- `window.peer.requestConnection()` returns `Promise<boolean>` and `checkConnectionStatus()` returns a string (values UNCONFIRMED).
 - No network access; workspace-write sandbox.
+- Panda image file is available locally.
 
 Key decisions:
-- Poll `checkConnectionStatus` on an interval and during connect flow; treat common "disconnected" strings as not connected.
-- Remove the PeerAuth extension status badge section; surface state via the CTA button.
-- Reduce vertical spacing and increase form grid columns on wide screens to fit one page.
+- Store the panda image in `public/panda.jpg` and reference it in UI + OG tags.
 
 State:
 - In progress.
 
 Done:
-- Reviewed `src/App.tsx` and UI components; loaded `frontend-design` skill.
-- Updated `src/App.tsx` to poll `checkConnectionStatus`, use it in the connect flow, remove the extension status badge, and tighten layout spacing/width.
+- Prior panda image and OG updates are in place.
+- Updated app and metadata branding to "PeerPanda Wallet".
+- Searched for the screenshot asset in the repo and `~/Downloads` without finding it.
+- Updated the favicon to use `public/favicon.ico`.
 
 Now:
-- Await user review; adjust connection status parsing if needed.
+- Await user review.
 
 Next:
-- Confirm `checkConnectionStatus` return values; tweak `isConnectedStatus` mapping if needed.
+- Confirm all visible branding strings and metadata are updated.
 
 Open questions (UNCONFIRMED if needed):
-- Exact strings returned by `checkConnectionStatus`.
+- None.
 
 Working set (files/ids/commands):
 - `src/App.tsx`
+- `index.html`
+- `public/panda.jpg`
 - `CONTINUITY.md`
