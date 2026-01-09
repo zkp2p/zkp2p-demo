@@ -48,8 +48,8 @@ const isConnectedStatus = (status: string | null) => {
 // Predefined examples
 const examples: Record<string, FormData> = {
   baseEth: {
-    referrer: "Rampy Pay",
-    referrerLogo: "https://demo.zkp2p.xyz/Rampy_logo.svg",
+    referrer: "PeerPanda Wallet",
+    referrerLogo: "https://demo.zkp2p.xyz/panda.jpg",
     callbackUrl: "https://demo.zkp2p.xyz",
     inputCurrency: "",
     inputAmount: "",
@@ -59,8 +59,8 @@ const examples: Record<string, FormData> = {
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929"
   },
   solana: {
-    referrer: "Rampy Pay",
-    referrerLogo: "https://demo.zkp2p.xyz/Rampy_logo.svg",
+    referrer: "PeerPanda Wallet",
+    referrerLogo: "https://demo.zkp2p.xyz/panda.jpg",
     callbackUrl: "https://demo.zkp2p.xyz",
     inputCurrency: "USD",
     inputAmount: "10",
@@ -70,8 +70,8 @@ const examples: Record<string, FormData> = {
     recipientAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
   },
   mainnetEth: {
-    referrer: "Rampy Pay",
-    referrerLogo: "https://demo.zkp2p.xyz/Rampy_logo.svg",
+    referrer: "PeerPanda Wallet",
+    referrerLogo: "https://demo.zkp2p.xyz/panda.jpg",
     callbackUrl: "https://demo.zkp2p.xyz",
     inputCurrency: "EUR",
     inputAmount: "10",
@@ -81,8 +81,8 @@ const examples: Record<string, FormData> = {
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929"
   },
   avalancheUsdc: {
-    referrer: "Rampy Pay",
-    referrerLogo: "https://demo.zkp2p.xyz/Rampy_logo.svg",
+    referrer: "PeerPanda Wallet",
+    referrerLogo: "https://demo.zkp2p.xyz/panda.jpg",
     callbackUrl: "https://demo.zkp2p.xyz",
     inputCurrency: "USD",
     inputAmount: "10",
@@ -92,8 +92,8 @@ const examples: Record<string, FormData> = {
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929"
   },
   exactUsdc: {
-    referrer: "Rampy Pay",
-    referrerLogo: "https://demo.zkp2p.xyz/Rampy_logo.svg",
+    referrer: "PeerPanda Wallet",
+    referrerLogo: "https://demo.zkp2p.xyz/panda.jpg",
     callbackUrl: "https://demo.zkp2p.xyz",
     inputCurrency: "",
     inputAmount: "",
@@ -124,17 +124,22 @@ const App: React.FC = () => {
 
   // Check if PeerAuth extension is installed
   useEffect(() => {
-    const checkExtension = () => {
-      if (typeof window.peer !== 'undefined') {
-        setExtensionStatus('installed');
-      } else {
-        setExtensionStatus('not_installed');
-      }
+    let isActive = true;
+    const checkExtension = async () => {
+      const hasPeer = typeof window.peer !== 'undefined';
+      const hasStatusCheck = typeof window.peer?.checkConnectionStatus === 'function';
+      if (!isActive) return;
+      setExtensionStatus(hasPeer && hasStatusCheck ? 'installed' : 'not_installed');
     };
 
     // Give some time for extension to inject
-    const timer = setTimeout(checkExtension, 500);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      void checkExtension();
+    }, 500);
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
   }, []);
 
   // Poll connection status while the extension is available
@@ -273,8 +278,8 @@ const App: React.FC = () => {
       <AppContainer>
         <ContentWrapper>
           <HeaderSection>
-            <Logo src="/Rampy_logo.svg" alt="Rampy Logo" />
-            <ThemedText.Hero>Rampy Demo Wallet</ThemedText.Hero>
+            <Logo src="/panda.jpg" alt="PeerPanda Logo" />
+            <ThemedText.Hero>PeerPanda Wallet</ThemedText.Hero>
             <ThemedText.BodySecondary style={{ textAlign: 'center', maxWidth: '600px', marginTop: '6px' }}>
               This page demonstrates integration with ZKP2P via the PeerAuth extension.
               Select an example or customize the query parameters below.
@@ -422,6 +427,7 @@ const HeaderSection = styled(ColumnCenter)`
 const Logo = styled.img`
   height: 64px;
   margin-bottom: 4px;
+  border-radius: 12px;
 `;
 
 const Section = styled(Column)`
