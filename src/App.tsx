@@ -7,20 +7,8 @@ import { Column, ColumnCenter } from '@components/layouts/Column';
 import Row from '@components/layouts/Row';
 import { Input } from '@components/common/Input';
 import { Button, ButtonRow } from '@components/common/Button';
-
-// Extend window to include peer auth extension
-declare global {
-  interface Window {
-    peer?: {
-      requestConnection: () => Promise<boolean>;
-      checkConnectionStatus: () => Promise<string>;
-      onramp: (queryString: string) => void;
-    };
-  }
-}
-
-// Chrome extension store URL for PeerAuth
-const PEERAUTH_EXTENSION_URL = 'https://chromewebstore.google.com/detail/peerauth-authenticate-and/ijpgccednehjpeclfcllnjjcmiohdjih';
+import { peerExtensionSdk } from '@zkp2p/sdk';
+import type { PeerExtensionOnrampParams } from '@zkp2p/sdk';
 
 interface FormData {
   referrer: string;
@@ -126,10 +114,9 @@ const App: React.FC = () => {
   useEffect(() => {
     let isActive = true;
     const checkExtension = async () => {
-      const hasPeer = typeof window.peer !== 'undefined';
-      const hasStatusCheck = typeof window.peer?.checkConnectionStatus === 'function';
+      const state = await peerExtensionSdk.getState();
       if (!isActive) return;
-      setExtensionStatus(hasPeer && hasStatusCheck ? 'installed' : 'not_installed');
+      setExtensionStatus(state === 'needs_install' ? 'not_installed' : 'installed');
     };
 
     // Give some time for extension to inject
@@ -151,9 +138,8 @@ const App: React.FC = () => {
 
     let isActive = true;
     const pollConnectionStatus = async () => {
-      if (!window.peer?.checkConnectionStatus) return;
       try {
-        const status = await window.peer.checkConnectionStatus();
+        const status = await peerExtensionSdk.checkConnectionStatus();
         if (isActive) {
           setConnectionStatus(status ?? '');
         }
@@ -183,31 +169,35 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Build query string from form data
-  const buildQueryString = useCallback(() => {
-    const params: string[] = [];
-    const fields: (keyof FormData)[] = [
-      "referrer", "referrerLogo", "callbackUrl", "inputCurrency",
-      "inputAmount", "paymentPlatform", "amountUsdc", "toToken", "recipientAddress"
-    ];
-
-    fields.forEach(field => {
-      const value = formData[field].trim();
-      if (value) {
-        params.push(`${encodeURIComponent(field)}=${encodeURIComponent(value)}`);
+  // Build onramp params from form data
+  const buildOnrampParams = useCallback((): PeerExtensionOnrampParams => {
+    const params: PeerExtensionOnrampParams = {};
+    const setParam = <K extends keyof PeerExtensionOnrampParams>(key: K, value: string) => {
+      const trimmed = value.trim();
+      if (trimmed) {
+        params[key] = trimmed;
       }
-    });
+    };
 
-    return params.length ? `?${params.join("&")}` : "";
+    setParam('referrer', formData.referrer);
+    setParam('referrerLogo', formData.referrerLogo);
+    setParam('callbackUrl', formData.callbackUrl);
+    setParam('inputCurrency', formData.inputCurrency);
+    setParam('inputAmount', formData.inputAmount);
+    setParam('paymentPlatform', formData.paymentPlatform);
+    setParam('amountUsdc', formData.amountUsdc);
+    setParam('toToken', formData.toToken);
+    setParam('recipientAddress', formData.recipientAddress);
+
+    return params;
   }, [formData]);
 
   const waitForConnection = useCallback(async () => {
-    if (!window.peer?.checkConnectionStatus) return false;
     const timeoutMs = 15000;
     const start = Date.now();
 
     while (Date.now() - start < timeoutMs) {
-      const status = await window.peer.checkConnectionStatus();
+      const status = await peerExtensionSdk.checkConnectionStatus();
       setConnectionStatus(status ?? '');
       if (isConnectedStatus(status ?? '')) {
         return true;
@@ -223,8 +213,8 @@ const App: React.FC = () => {
     setError(null);
 
     // Check if extension is installed
-    if (!window.peer) {
-      window.open(PEERAUTH_EXTENSION_URL, '_blank');
+    if (!peerExtensionSdk.isAvailable()) {
+      peerExtensionSdk.openInstallPage();
       return;
     }
 
@@ -233,7 +223,7 @@ const App: React.FC = () => {
     try {
       let status = '';
       try {
-        status = await window.peer.checkConnectionStatus();
+        status = await peerExtensionSdk.checkConnectionStatus();
         setConnectionStatus(status ?? '');
       } catch {
         setConnectionStatus('');
@@ -241,7 +231,7 @@ const App: React.FC = () => {
       const alreadyConnected = isConnectedStatus(status ?? '');
 
       if (!alreadyConnected) {
-        const approved = await window.peer.requestConnection();
+        const approved = await peerExtensionSdk.requestConnection();
         if (!approved) {
           setError('Connection was rejected. Please approve the connection request.');
           return;
@@ -255,14 +245,14 @@ const App: React.FC = () => {
       }
 
       // Call onramp with query params
-      const queryString = buildQueryString();
-      window.peer.onramp(queryString);
+      const params = buildOnrampParams();
+      peerExtensionSdk.onramp(params);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect to PeerAuth');
     } finally {
       setIsConnecting(false);
     }
-  }, [buildQueryString, waitForConnection]);
+  }, [buildOnrampParams, waitForConnection]);
 
   // Get button text based on state
   const getButtonText = () => {

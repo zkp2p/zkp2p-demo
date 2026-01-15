@@ -1,33 +1,32 @@
 Goal (incl. success criteria):
-- Use the panda JPG as the app icon (favicon) and ensure branding says "PeerPanda Wallet".
+- Use the installed `@zkp2p/sdk` extension wrapper in zkp2p-demo instead of `window.peer`, with no Vite config changes.
 
 Constraints/Assumptions:
 - No network access; workspace-write sandbox.
-- Panda image file is available locally.
+- `@zkp2p/sdk` is already installed.
 
 Key decisions:
-- Store the panda image in `public/panda.jpg` and reference it in UI + OG tags.
+- Revert the Vite fs allowlist change and import from `@zkp2p/sdk`.
 
 State:
-- In progress.
+- Awaiting confirmation.
 
 Done:
-- Prior panda image and OG updates are in place.
-- Updated app and metadata branding to "PeerPanda Wallet".
-- Searched for the screenshot asset in the repo and `~/Downloads` without finding it.
-- Updated the favicon to use `public/favicon.ico`.
+- Replaced `window.peer` calls with `peerExtensionSdk` in `src/App.tsx`.
+- Swapped query-string builder for `PeerExtensionOnrampParams` object usage.
+- Reverted Vite fs allowlist change.
+- Switched SDK imports to `@zkp2p/sdk`.
 
 Now:
 - Await user review.
 
 Next:
-- Confirm all visible branding strings and metadata are updated.
+- Optional: run dev/typecheck to confirm build with installed SDK.
 
 Open questions (UNCONFIRMED if needed):
 - None.
 
 Working set (files/ids/commands):
 - `src/App.tsx`
-- `index.html`
-- `public/panda.jpg`
+- `vite.config.ts`
 - `CONTINUITY.md`
