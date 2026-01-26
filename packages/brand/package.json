@@ -2,7 +2,7 @@
   "name": "@zkp2p/brand",
   "version": "0.1.0",
   "private": true,
-  "description": "Peer brand design system - tokens, assets, logos, icons, videos, and fonts",
+  "description": "Peer brand design system - tokens, logos, icons, and fonts",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -41,7 +41,6 @@
     "./fonts.css": "./src/fonts.css",
     "./logos/*": "./logos/*",
     "./icons/*": "./icons/*",
-    "./videos/*": "./videos/*",
     "./fonts/*": "./fonts/*",
     "./tiers/*": "./tiers/*",
     "./textures/*": "./src/textures/*"
@@ -50,7 +49,6 @@
     "src",
     "logos",
     "icons",
-    "videos",
     "fonts",
     "tiers"
   ],

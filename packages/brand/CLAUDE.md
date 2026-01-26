@@ -8,7 +8,7 @@ This package provides:
 
 - **Design Tokens** - TypeScript constants for colors, typography, spacing
 - **CSS Variables** - Custom properties for use in stylesheets
-- **Static Assets** - Logos, icons, videos, fonts
+- **Static Assets** - Logos, icons, fonts
 - **Utilities** - Helper functions for working with brand tokens
 
 Extracted from **[Figma Brand Book](https://www.figma.com/design/uwou994XdkDmul4n8uz9cE)** and **[Figma UI Toolkit](https://www.figma.com/design/t6mxz4O8CtFKTNO58yt2cE?node-id=140-8907)** - the authoritative sources for all Peer brand specifications.
@@ -37,10 +37,6 @@ packages/brand/
 │       └── peer-profile.png
 ├── icons/
 │   └── peer-icon-{1-20}.svg   # Custom Peer iconography
-├── videos/
-│   ├── hero-desktop.mp4       # Hero animation
-│   ├── hero-mobile.mp4        # Mobile hero
-│   └── {fast,fair,secure,simple}[-mobile].mp4
 └── fonts/
     ├── PPValve-PlainSemibold.{woff2,woff,otf}  # Primary headline weight (600)
     ├── PPValve-PlainExtrabold.otf              # Bold emphasis (800)
@@ -107,9 +103,6 @@ import peerLogo from "@zkp2p/brand/logos/peer-logo-colour.svg";
 
 // Icons
 import starIcon from "@zkp2p/brand/icons/peer-icon-1.svg";
-
-// Videos
-import heroVideo from "@zkp2p/brand/videos/hero-desktop.mp4";
 ```
 
 ### Fonts
