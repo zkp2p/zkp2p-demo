@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@zkp2p/brand": "file:./packages/brand",
     "@zkp2p/sdk": "^0.0.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

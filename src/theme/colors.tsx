@@ -1,75 +1,137 @@
 /**
- * Add opacity information to a hex color
- * @param amount opacity value from 0 to 100
- * @param hexColor
+ * Peer Brand Color System
+ *
+ * This file re-exports colors from @zkp2p/brand and provides
+ * backwards-compatible legacy color mappings.
+ *
+ * PREFER: Import directly from @zkp2p/brand for new code
+ * USE: peer.* tokens over colors.* for new components
  */
-export function opacify(amount: number, hexColor: string): string {
-  if (!hexColor.startsWith('#')) {
-    return hexColor;
-  };
 
-  if (hexColor.length !== 7) {
-    throw new Error(`opacify: provided color ${hexColor} was not in hexadecimal format (e.g. #000000)`);
-  };
+// Re-export from brand package (single source of truth)
+export {
+  colors as brandColors,
+  borders,
+  text,
+  gradientValues,
+  buttonSizes,
+  spinnerSizes,
+  radii,
+  opacify,
+  fontFamilies,
+  fontWeights,
+  fontSizes,
+  typography,
+  mobileTypography,
+  lineHeights,
+  letterSpacing,
+  transitions,
+  zIndices,
+} from "@zkp2p/brand";
 
-  if (amount < 0 || amount > 100) {
-    throw new Error('opacify: provided amount should be between 0 and 100');
-  };
+// Import for local use
+import { colors as brandColors, borders, opacify } from "@zkp2p/brand";
 
-  const opacityHex = Math.round((amount / 100) * 255).toString(16);
-  const opacifySuffix = opacityHex.length < 2 ? `0${opacityHex}` : opacityHex;
+/*
+ * Peer Brand Colors
+ *
+ * Maps brand package tokens to the existing `peer` object interface
+ * for backwards compatibility with existing components.
+ */
+export const peer = {
+  // Core
+  black: brandColors.black,
+  white: brandColors.white,
+  richBlack: brandColors.richBlack,
+  lightGrey: brandColors.lightGrey,
 
-  return `${hexColor.slice(0, 7)}${opacifySuffix}`;
-};
+  // IGNITE Gradient colors
+  igniteYellow: brandColors.igniteYellow,
+  igniteRed: brandColors.igniteRed,
 
+  // Borders
+  borderDark: borders.dark,
+  borderLight: borders.light,
+
+  // Text
+  textPrimary: brandColors.white,
+  textSecondary: brandColors.grey,
+  textPlaceholder: "#6C757D",
+
+  // Status colors
+  success: brandColors.success,
+  warning: brandColors.warning,
+  error: brandColors.error,
+
+  // Interactive colors
+  link: brandColors.link,
+} as const;
+
+// Re-export gradients (already correct in brand package)
+export { gradients } from "@zkp2p/brand";
+
+/*
+ * Legacy Colors
+ *
+ * Backwards-compatible color mappings for existing components.
+ * For new code, use `peer.*` or import directly from @zkp2p/brand.
+ */
 export const colors = {
-  linkBlue: '#0066CC',
+  linkBlue: peer.link, // Brand: #1F95E2
 
-  darkText: '#FFFFFF',
-  grayText: '#6C757D',
-  lightGrayText: '#9CA3AA',
+  // Text colors → use peer.textPrimary, peer.textSecondary
+  darkText: peer.white,
+  grayText: peer.textPlaceholder,
+  lightGrayText: peer.textSecondary, // Brand: #777777
 
-  white: '#FFFFFF',
-  black: '#000000',
-  offWhite: '#9CA3AA',
+  white: peer.white,
+  black: peer.black,
+  offWhite: peer.lightGrey, // Brand: #EEEEEE
 
-  container: '#0D111C',
+  // Background → use peer.black (primary) or peer.richBlack (elevated)
+  container: peer.black,
 
-  buttonDefault: '#FF3F3E',
-  buttonHover: '#B82524',
-  buttonDisabled: '#B82524',
+  // Buttons → use gradients.ignite for primary CTA
+  buttonDefault: peer.igniteRed,
+  buttonHover: peer.igniteRed,
+  buttonDisabled: opacify(25, peer.igniteRed),
 
-  iconButtonDefault: '#98A1C03D',
-  iconButtonHover: '#98A1C055',
-  iconButtonActive: '#98A1C070',
+  iconButtonDefault: opacify(24, peer.white),
+  iconButtonHover: opacify(33, peer.white),
+  iconButtonActive: opacify(44, peer.white),
 
-  inputDefaultColor: '#131A2A',
-  inputPlaceholderColor: '#6C757D',
+  // Inputs → use peer.black background, peer.borderDark border
+  inputDefaultColor: peer.black,
+  inputPlaceholderColor: peer.textPlaceholder,
 
-  connectionStatusRed: '#DF2E2D',
-  connectionStatusGreen: '#4BB543',
+  // Status colors (unchanged)
+  connectionStatusRed: peer.error,
+  connectionStatusGreen: peer.success,
 
-  defaultBorderColor: '#98A1C03D',
-  readOnlyBorderColor: '#98A1C03D',
+  // Borders → use peer.borderDark
+  defaultBorderColor: peer.borderDark,
+  readOnlyBorderColor: peer.borderDark,
 
-  defaultInputColor: '#131A2A',
-  readOnlyInputColor: '#101A2A',
+  defaultInputColor: peer.black,
+  readOnlyInputColor: peer.black,
 
-  selectorColor: '#0D111C',
-  selectorHover: '#1B1E29',
-  selectorHoverBorder: 'rgba(255, 255, 255, 0.1)',
+  // Selectors → use peer.richBlack (gray) per Figma
+  selectorColor: peer.richBlack,
+  selectorHover: opacify(80, peer.richBlack),
+  selectorHoverBorder: opacify(15, peer.white),
 
-  rowSelectorColor: '#232839',
-  rowSelectorHover: '#1E222F',
+  rowSelectorColor: peer.richBlack,
+  rowSelectorHover: opacify(80, peer.richBlack),
 
-  warningRed: '#DF2E2D',
-  warningYellow: '#FFC107',
-  validGreen: '#4BB543',
-  invalidRed: '#DF2E2D',
+  // Status colors (unchanged)
+  warningRed: peer.error,
+  warningYellow: peer.warning,
+  validGreen: peer.success,
+  invalidRed: peer.error,
 
   // Additional UI colors
-  defaultBorder: opacify(20, '#98A1C0'),
-  backgroundSecondary: '#1B1E29',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#9CA3AA',
+  defaultBorder: peer.borderDark,
+  backgroundSecondary: peer.richBlack,
+  textPrimary: peer.textPrimary,
+  textSecondary: peer.textSecondary,
 };

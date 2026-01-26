@@ -1,24 +1,25 @@
-import styled from 'styled-components';
-import { colors } from '@theme/colors';
+import type { ReactNode } from "react";
+import styled from "styled-components";
+import { peer, radii } from "@theme/colors";
 
 const StyledCard = styled.div<{ cursor?: string }>`
   display: flex;
-  background-color: ${colors.container};
+  background-color: ${peer.richBlack};
   flex-direction: column;
   justify-content: space-between;
   text-decoration: none;
-  color: ${colors.darkText};
+  color: ${peer.textPrimary};
   padding: 24px;
-  border-radius: 16px;
-  border: 1px solid ${colors.defaultBorderColor};
-  cursor: ${({ cursor }) => cursor || 'normal'};
+  border-radius: ${radii.lg}px;
+  border: 1px solid ${peer.borderDark};
+  cursor: ${({ cursor }) => cursor || "normal"};
 `;
 
 const CardTitle = styled.div`
   font-size: 24px;
   line-height: 32px;
   font-weight: 600;
-  color: ${colors.darkText};
+  color: ${peer.textPrimary};
   margin-bottom: 8px;
 `;
 
@@ -27,13 +28,13 @@ const CardDescription = styled.div`
   flex-direction: column;
   font-size: 16px;
   line-height: 24px;
-  color: ${colors.textSecondary};
+  color: ${peer.textSecondary};
 `;
 
 interface CardProps {
   title: string;
   description: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 const Card = ({ title, description, children }: CardProps) => {

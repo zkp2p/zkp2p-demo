@@ -1,6 +1,7 @@
-import React, { ChangeEvent } from 'react';
-import styled from 'styled-components';
-import { colors } from '@theme/colors';
+import React, { ChangeEvent } from "react";
+import styled from "styled-components";
+import { fontSizes, fontWeights } from "@zkp2p/brand";
+import { peer, radii, fontFamilies, lineHeights, letterSpacing } from "@theme/colors";
 
 interface InputProps {
   label: string;
@@ -48,13 +49,13 @@ const Container = styled.div`
   flex-direction: row;
   justify-content: space-between;
   padding: 16px;
-  border-radius: 16px;
-  border: 1px solid ${colors.defaultBorderColor};
-  background-color: ${colors.inputDefaultColor};
+  border-radius: ${radii.md}px;
+  border: 1px solid transparent;
+  background-color: ${peer.black};
+  transition: border-color 0.2s ease;
 
   &:focus-within {
-    border-color: ${colors.inputPlaceholderColor};
-    border-width: 1px;
+    border-color: transparent;
   }
 `;
 
@@ -67,9 +68,11 @@ const LabelAndInputContainer = styled.div`
 
 const Label = styled.label`
   display: flex;
-  font-size: 14px;
-  font-weight: 550;
-  color: #CED4DA;
+  font-size: ${fontSizes.button}px;
+  font-weight: ${fontWeights.semibold};
+  letter-spacing: ${letterSpacing.wide};
+  text-transform: uppercase;
+  color: ${peer.textSecondary};
 `;
 
 const InputWrapper = styled.div`
@@ -86,9 +89,13 @@ const StyledInput = styled.input<{ readOnly?: boolean }>`
   flex-grow: 1;
   border: 0;
   padding: 0;
-  color: ${colors.darkText};
-  background-color: ${colors.inputDefaultColor};
-  font-size: 18px;
+  color: ${peer.textPrimary};
+  background-color: transparent;
+  font-size: ${fontSizes.bodyLarge}px;
+  font-family: ${fontFamilies.body};
+  font-weight: ${fontWeights.medium};
+  line-height: ${lineHeights.body};
+  font-variant-numeric: tabular-nums;
 
   &:focus {
     box-shadow: none;
@@ -96,12 +103,13 @@ const StyledInput = styled.input<{ readOnly?: boolean }>`
   }
 
   &::placeholder {
-    color: ${colors.inputPlaceholderColor};
+    color: ${peer.textPlaceholder};
   }
 
   ${({ readOnly }) =>
     readOnly &&
     `
       pointer-events: none;
+      opacity: 0.7;
     `}
 `;

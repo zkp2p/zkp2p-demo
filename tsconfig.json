@@ -8,7 +8,15 @@
     "paths": {
       "@components/*": ["components/*"],
       "@theme/*": ["theme/*"],
-      "@assets/*": ["assets/*"]
+      "@assets/*": ["assets/*"],
+      "@zkp2p/brand": ["../packages/brand/src/index.ts"],
+      "@zkp2p/brand/logos/*": ["../packages/brand/logos/*"],
+      "@zkp2p/brand/icons/*": ["../packages/brand/icons/*"],
+      "@zkp2p/brand/videos/*": ["../packages/brand/videos/*"],
+      "@zkp2p/brand/fonts/*": ["../packages/brand/fonts/*"],
+      "@zkp2p/brand/tiers/*": ["../packages/brand/tiers/*"],
+      "@zkp2p/brand/textures/*": ["../packages/brand/src/textures/*"],
+      "@zkp2p/brand/*": ["../packages/brand/src/*", "../packages/brand/*"]
     },
     "allowJs": true,
     "skipLibCheck": true,
