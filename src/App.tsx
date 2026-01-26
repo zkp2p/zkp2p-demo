@@ -11,7 +11,6 @@ import { Button, ButtonRow } from "@components/common/Button";
 import { peerExtensionSdk } from "@zkp2p/sdk";
 import type { PeerExtensionOnrampParams } from "@zkp2p/sdk";
 import { BackgroundNoise, GradientText, Logo } from "@zkp2p/brand/components";
-import noiseTexture from "@zkp2p/brand/textures/noise.png";
 
 interface FormData {
   referrer: string;
@@ -276,7 +275,7 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <AppContainer>
         <NoiseLayer>
-          <BackgroundNoise className="noise-texture" texture={noiseTexture} />
+          <BackgroundNoise className="noise-texture" />
         </NoiseLayer>
         <Glow />
 

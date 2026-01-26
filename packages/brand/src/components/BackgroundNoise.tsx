@@ -1,7 +1,9 @@
+import defaultNoiseTexture from "../textures/noise.png";
+
 export interface BackgroundNoiseProps {
   className?: string;
   /**
-   * URL to the noise texture image. Import from @zkp2p/brand/textures/noise.png
+   * URL to the noise texture image. Defaults to the built-in noise texture.
    */
   texture?: string;
 }
@@ -18,14 +20,13 @@ export interface BackgroundNoiseProps {
  *
  * ```tsx
  * import { BackgroundNoise } from "@zkp2p/brand/components";
- * import noiseTexture from "@zkp2p/brand/textures/noise.png";
  *
  * function MySection() {
  *   return (
  *     <section className="relative bg-white">
  *       {/* Noise texture - z-[1], just above bg-white *\/}
  *       <div className="pointer-events-none absolute inset-0 z-[1]">
- *         <BackgroundNoise className="h-full w-full" texture={noiseTexture} />
+ *         <BackgroundNoise className="h-full w-full" />
  *       </div>
  *
  *       {/* Content - z-10, above noise *\/}
@@ -48,12 +49,8 @@ export interface BackgroundNoiseProps {
  */
 export function BackgroundNoise({
   className = "",
-  texture,
+  texture = defaultNoiseTexture,
 }: BackgroundNoiseProps) {
-  if (!texture) {
-    return <div className={`pointer-events-none ${className}`} />;
-  }
-
   return (
     <div
       className={`pointer-events-none ${className}`}
