@@ -31,7 +31,7 @@ export const Button = styled.button<{
   transition: ${transitions.background};
   overflow: hidden;
 
-  ${({ variant = "primary", disabled }) => {
+  ${({ variant = "primary" }) => {
     if (variant === "secondary") {
       return css`
         background: ${peer.white};
