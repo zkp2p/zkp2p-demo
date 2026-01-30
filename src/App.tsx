@@ -79,6 +79,17 @@ const examples: Record<string, FormData> = {
     toToken: "43114:0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929",
   },
+  hyperliquidUsdc: {
+    referrer: "Peer Demo Wallet",
+    referrerLogo: "https://demo.zkp2p.xyz/peer-profile.png",
+    callbackUrl: "https://demo.zkp2p.xyz",
+    inputCurrency: "USD",
+    inputAmount: "1000",
+    paymentPlatform: "",
+    amountUsdc: "",
+    toToken: "1337:0x00000000000000000000000000000000",
+    recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929",
+  },
   exactUsdc: {
     referrer: "Peer Demo Wallet",
     referrerLogo: "https://demo.zkp2p.xyz/peer-profile.png",
@@ -313,6 +324,9 @@ const App: React.FC = () => {
                 </Button>
                 <Button variant="secondary" onClick={() => setExample("avalancheUsdc")}>
                   Onramp 10 USD to Avalanche USDC
+                </Button>
+                <Button variant="secondary" onClick={() => setExample("hyperliquidUsdc")}>
+                  Onramp 1000 USDC to Hyperliquid
                 </Button>
                 <Button variant="secondary" onClick={() => setExample("exactUsdc")}>
                   Onramp Exact 1 USDC
