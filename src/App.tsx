@@ -112,6 +112,10 @@ const App: React.FC = () => {
   const [connectionStatus, setConnectionStatus] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
+  const isExtensionInstalled = extensionStatus === "installed";
+  const isExtensionChecking = extensionStatus === "checking";
+  const isConnected = isConnectedStatus(connectionStatus);
+
   // Check if PeerAuth extension is installed
   useEffect(() => {
     let isActive = true;
@@ -133,7 +137,7 @@ const App: React.FC = () => {
 
   // Poll connection status while the extension is available
   useEffect(() => {
-    if (extensionStatus !== "installed") {
+    if (!isExtensionInstalled) {
       setConnectionStatus("");
       return;
     }
@@ -158,7 +162,7 @@ const App: React.FC = () => {
       isActive = false;
       clearInterval(interval);
     };
-  }, [extensionStatus]);
+  }, [isExtensionInstalled]);
 
   const handleInputChange = useCallback(
     (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,59 +220,66 @@ const App: React.FC = () => {
     return false;
   }, []);
 
-  // Handle the onramp flow with PeerAuth extension
-  const handleOnramp = useCallback(async () => {
+  const handleConnect = useCallback(async () => {
     setError(null);
 
-    // Check if extension is installed
     if (!peerExtensionSdk.isAvailable()) {
       peerExtensionSdk.openInstallPage();
+      return;
+    }
+
+    if (isConnected) {
       return;
     }
 
     setIsConnecting(true);
 
     try {
-      let status = "";
-      try {
-        status = await peerExtensionSdk.checkConnectionStatus();
-        setConnectionStatus(status ?? "");
-      } catch {
-        setConnectionStatus("");
-      }
-      const alreadyConnected = isConnectedStatus(status ?? "");
-
-      if (!alreadyConnected) {
-        const approved = await peerExtensionSdk.requestConnection();
-        if (!approved) {
-          setError("Connection was rejected. Please approve the request.");
-          return;
-        }
+      const approved = await peerExtensionSdk.requestConnection();
+      if (!approved) {
+        setError("Connection was rejected. Please approve the request.");
+        return;
       }
 
-      const connected = alreadyConnected || (await waitForConnection());
+      const connected = await waitForConnection();
       if (!connected) {
         setError("Connection is still pending. Please approve the extension request and try again.");
         return;
       }
-
-      // Call onramp with query params
-      const params = buildOnrampParams();
-      peerExtensionSdk.onramp(params);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to connect to PeerAuth");
     } finally {
       setIsConnecting(false);
     }
-  }, [buildOnrampParams, waitForConnection]);
+  }, [isConnected, waitForConnection]);
 
-  // Get button text based on state
-  const getButtonText = () => {
-    if (extensionStatus === "checking") return "Checking extension";
-    if (extensionStatus === "not_installed") return "Install Peer Extension";
+  const handleOnramp = useCallback(() => {
+    setError(null);
+
+    if (!peerExtensionSdk.isAvailable()) {
+      peerExtensionSdk.openInstallPage();
+      return;
+    }
+
+    try {
+      const params = buildOnrampParams();
+      peerExtensionSdk.onramp(params);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to launch onramp");
+    }
+  }, [buildOnrampParams]);
+
+  const connectButtonText = () => {
+    if (isExtensionChecking) return "Checking extension";
+    if (!isExtensionInstalled) return "Install Peer Extension";
     if (isConnecting) return "Connecting";
-    if (isConnectedStatus(connectionStatus)) return "Onramp with Peer";
-    return "Connect & Onramp";
+    if (isConnected) return "Connected";
+    return "Connect Extension";
+  };
+
+  const onrampButtonText = () => {
+    if (isExtensionChecking) return "Checking extension";
+    return "Open Onramp";
   };
 
   return (
@@ -397,10 +408,21 @@ const App: React.FC = () => {
 
               <CTARow>
                 <Button
-                  onClick={handleOnramp}
-                  disabled={extensionStatus === "checking" || isConnecting}
+                  variant="tertiary"
+                  onClick={handleConnect}
+                  disabled={isExtensionChecking || isConnecting}
                 >
-                  {getButtonText()}
+                  {connectButtonText()}
+                </Button>
+                <Button
+                  onClick={handleOnramp}
+                  disabled={
+                    !isExtensionInstalled ||
+                    isConnecting ||
+                    !isConnected
+                  }
+                >
+                  {onrampButtonText()}
                 </Button>
               </CTARow>
             </Section>
@@ -541,7 +563,7 @@ const FormGrid = styled.div`
   }
 `;
 
-const CTARow = styled(Row)`
+const CTARow = styled(ButtonRow)`
   justify-content: center;
   margin-top: 10px;
 `;
