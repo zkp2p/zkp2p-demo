@@ -8,6 +8,7 @@ const sizeMap: Record<LogoSize, number> = {
   lg: 48,
   xl: 64,
 };
+const logoAspectRatio = 2456 / 864;
 
 export type { LogoVariant };
 
@@ -99,6 +100,7 @@ export function Logo({
   target = "_self",
 }: LogoProps) {
   const computedHeight = height ?? sizeMap[size];
+  const computedWidth = width ?? Math.round(computedHeight * logoAspectRatio);
   const logoPath = getLogoUrl(variant);
 
   const imgElement = (
@@ -106,11 +108,11 @@ export function Logo({
       src={logoPath}
       alt={alt}
       height={computedHeight}
-      width={width}
+      width={computedWidth}
       className={className}
       style={{
         height: computedHeight,
-        width: width ?? "auto",
+        width: computedWidth,
         display: "block",
         ...style,
       }}

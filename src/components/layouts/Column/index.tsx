@@ -6,13 +6,13 @@ export const Column = styled.div<{
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: ${({ gap }) => gap || '0'};
-`
+  gap: ${({ gap }) => gap ?? '0'};
+`;
 
 export const ColumnCenter = styled(Column)`
   width: 100%;
   align-items: center;
-`
+`;
 
 export const AutoColumn = styled.div<{
   gap?: string
@@ -21,9 +21,9 @@ export const AutoColumn = styled.div<{
 }>`
   display: grid;
   grid-auto-rows: auto;
-  grid-row-gap: ${({ gap }) => gap || '0'};
-  justify-items: ${({ justify }) => justify && justify};
-  flex-grow: ${({ grow }) => grow && 1};
-`
+  grid-row-gap: ${({ gap }) => gap ?? '0'};
+  justify-items: ${({ justify }) => justify ?? 'stretch'};
+  flex-grow: ${({ grow }) => (grow ? 1 : 0)};
+`;
 
 export default Column

@@ -8,6 +8,7 @@ import {
   fontSizes,
   letterSpacing,
   buttonSizes,
+  transitions,
 } from "@theme/colors";
 
 export const Button = styled.button<{
@@ -18,7 +19,7 @@ export const Button = styled.button<{
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 24px;
+  padding: 16px 24px;
   min-height: ${buttonSizes.md}px;
   border-radius: ${radii.md}px;
   font-family: ${fontFamilies.body};
@@ -26,18 +27,22 @@ export const Button = styled.button<{
   font-weight: ${fontWeights.semibold};
   letter-spacing: ${letterSpacing.button};
   text-transform: uppercase;
+  line-height: 1;
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
   border: none;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition: ${transitions.background}, transform 0.15s ease, border-color 0.2s ease,
+    color 0.2s ease;
 
   ${({ variant = "primary" }) => {
     if (variant === "secondary") {
       return css`
-        background: ${peer.white};
-        color: ${peer.black};
+        background: transparent;
+        color: ${peer.white};
+        border: 1px solid ${peer.white};
 
         &:hover:not([disabled]) {
-          background: ${peer.lightGrey};
+          border-color: ${peer.lightGrey};
+          color: ${peer.lightGrey};
         }
 
         &:active:not([disabled]) {
@@ -48,13 +53,11 @@ export const Button = styled.button<{
 
     if (variant === "tertiary") {
       return css`
-        background: ${peer.richBlack};
-        color: ${peer.textPrimary};
-        border: 1px solid ${peer.borderDark};
+        background: transparent;
+        color: ${peer.textSecondary};
 
         &:hover:not([disabled]) {
-          background: ${peer.black};
-          border-color: ${peer.textSecondary};
+          color: ${peer.textPrimary};
         }
 
         &:active:not([disabled]) {
@@ -69,12 +72,12 @@ export const Button = styled.button<{
       color: ${peer.black};
 
       &:hover:not([disabled]) {
-        filter: brightness(1.1);
+        background: ${gradients.igniteHover};
       }
 
       &:active:not([disabled]) {
         transform: scale(0.98);
-        filter: brightness(0.95);
+        background: ${gradients.ignite};
       }
     `;
   }}

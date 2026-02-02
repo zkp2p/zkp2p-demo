@@ -7,30 +7,13 @@
  * - Inter: Body text, UI, buttons
  */
 
+:root {
+  color-scheme: dark;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   font-family: inherit;
-}
-
-/* Hide scrollbars (keep scrolling) for a cleaner UI */
-body {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge legacy */
-}
-
-body::-webkit-scrollbar {
-  width: 0 !important;
-  height: 0 !important;
-}
-
-body * {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none;
-}
-
-body *::-webkit-scrollbar {
-  width: 0 !important;
-  height: 0 !important;
 }
 
 body {

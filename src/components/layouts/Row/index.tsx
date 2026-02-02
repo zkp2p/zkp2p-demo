@@ -12,13 +12,12 @@ const Row = styled(Box)<{
 }>`
   width: ${({ width }) => width ?? '100%'};
   display: flex;
-  padding: 0;
   align-items: ${({ align }) => align ?? 'center'};
   justify-content: ${({ justify }) => justify ?? 'flex-start'};
-  padding: ${({ padding }) => padding};
-  border: ${({ border }) => border};
-  border-radius: ${({ borderRadius }) => borderRadius};
-  gap: ${({ gap }) => gap};
+  padding: ${({ padding }) => padding ?? '0'};
+  border: ${({ border }) => border ?? 'none'};
+  border-radius: ${({ borderRadius }) => borderRadius ?? '0'};
+  gap: ${({ gap }) => gap ?? '0'};
 `;
 
 export const RowBetween = styled(Row)`
@@ -31,7 +30,7 @@ export const RowCenter = styled(Row)`
 
 export const RowFixed = styled(Row)<{ gap?: string; justify?: string }>`
   width: fit-content;
-  margin: ${({ gap }) => gap && `-${gap}`};
+  margin: ${({ gap }) => (gap ? `-${gap}` : '0')};
 `;
 
 export default Row;

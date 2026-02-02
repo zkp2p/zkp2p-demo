@@ -9,7 +9,7 @@ import Row from "@components/layouts/Row";
 import { Input } from "@components/common/Input";
 import { Button, ButtonRow } from "@components/common/Button";
 import { peerExtensionSdk } from "@zkp2p/sdk";
-import type { PeerExtensionOnrampParams } from "@zkp2p/sdk";
+import type { PeerConnectionStatus, PeerExtensionOnrampParams } from "@zkp2p/sdk";
 import { BackgroundNoise, GradientText, Logo } from "@zkp2p/brand/components";
 
 interface FormData {
@@ -24,14 +24,8 @@ interface FormData {
   recipientAddress: string;
 }
 
-const disconnectedStatuses = new Set(["disconnected"]);
-
-const isConnectedStatus = (status: string | null) => {
-  if (!status) return false;
-  const normalized = status.trim().toLowerCase();
-  if (!normalized) return false;
-  return !disconnectedStatuses.has(normalized);
-};
+const isConnectedStatus = (status: PeerConnectionStatus | "" | null) =>
+  status === "connected";
 
 // Predefined examples
 const examples: Record<string, FormData> = {
@@ -120,32 +114,49 @@ const App: React.FC = () => {
     "checking" | "installed" | "not_installed"
   >("checking");
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<string>("");
+  const [connectionStatus, setConnectionStatus] = useState<PeerConnectionStatus | "">("");
   const [error, setError] = useState<string | null>(null);
 
   // Check if PeerAuth extension is installed
   useEffect(() => {
     let isActive = true;
+    let attempts = 0;
+    const maxAttempts = 6;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     const checkExtension = async () => {
-      const state = await peerExtensionSdk.getState();
-      if (!isActive) return;
-      setExtensionStatus(state === "needs_install" ? "not_installed" : "installed");
+      attempts += 1;
+      try {
+        const state = await peerExtensionSdk.getState();
+        if (!isActive) return;
+        if (state !== "needs_install") {
+          setExtensionStatus("installed");
+          return;
+        }
+      } catch {
+        if (!isActive) return;
+      }
+
+      if (attempts >= maxAttempts) {
+        setExtensionStatus("not_installed");
+        return;
+      }
+
+      timer = setTimeout(checkExtension, 500);
     };
 
     // Give some time for extension to inject
-    const timer = setTimeout(() => {
-      void checkExtension();
-    }, 500);
+    timer = setTimeout(checkExtension, 500);
     return () => {
       isActive = false;
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
   // Poll connection status while the extension is available
   useEffect(() => {
     if (extensionStatus !== "installed") {
-      setConnectionStatus("");
+      setConnectionStatus((prev) => (prev === "" ? prev : ""));
       return;
     }
 
@@ -154,11 +165,11 @@ const App: React.FC = () => {
       try {
         const status = await peerExtensionSdk.checkConnectionStatus();
         if (isActive) {
-          setConnectionStatus(status ?? "");
+          setConnectionStatus((prev) => (prev === (status ?? "") ? prev : (status ?? "")));
         }
       } catch {
         if (isActive) {
-          setConnectionStatus("");
+          setConnectionStatus((prev) => (prev === "" ? prev : ""));
         }
       }
     };
@@ -217,7 +228,7 @@ const App: React.FC = () => {
 
     while (Date.now() - start < timeoutMs) {
       const status = await peerExtensionSdk.checkConnectionStatus();
-      setConnectionStatus(status ?? "");
+      setConnectionStatus((prev) => (prev === (status ?? "") ? prev : (status ?? "")));
       if (isConnectedStatus(status ?? "")) {
         return true;
       }
@@ -240,16 +251,17 @@ const App: React.FC = () => {
     setIsConnecting(true);
 
     try {
-      let status = "";
+      let status: PeerConnectionStatus | "" = "";
       try {
         status = await peerExtensionSdk.checkConnectionStatus();
         setConnectionStatus(status ?? "");
       } catch {
         setConnectionStatus("");
       }
+      const isPending = status === "pending";
       const alreadyConnected = isConnectedStatus(status ?? "");
 
-      if (!alreadyConnected) {
+      if (!alreadyConnected && !isPending) {
         const approved = await peerExtensionSdk.requestConnection();
         if (!approved) {
           setError("Connection was rejected. Please approve the request.");
@@ -276,8 +288,9 @@ const App: React.FC = () => {
   // Get button text based on state
   const getButtonText = () => {
     if (extensionStatus === "checking") return "Checking extension";
-    if (extensionStatus === "not_installed") return "Install Peer Extension";
+    if (extensionStatus === "not_installed") return "Install PeerAuth Extension";
     if (isConnecting) return "Connecting";
+    if (connectionStatus === "pending") return "Awaiting Approval";
     if (isConnectedStatus(connectionStatus)) return "Onramp with Peer";
     return "Connect & Onramp";
   };
@@ -285,11 +298,6 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <AppContainer>
-        <NoiseLayer>
-          <BackgroundNoise className="noise-texture" />
-        </NoiseLayer>
-        <Glow />
-
         <ContentWrapper>
           <HeaderSection>
             <LogoRow>
@@ -347,7 +355,7 @@ const App: React.FC = () => {
                   name="referrer"
                   value={formData.referrer}
                   onChange={handleInputChange("referrer")}
-                  placeholder="Your app name"
+                  placeholder="Acme Wallet"
                 />
                 <Input
                   label="referrerLogo"
@@ -355,6 +363,9 @@ const App: React.FC = () => {
                   value={formData.referrerLogo}
                   onChange={handleInputChange("referrerLogo")}
                   placeholder="https://example.com/logo.svg"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
                 />
                 <Input
                   label="callbackUrl"
@@ -362,6 +373,9 @@ const App: React.FC = () => {
                   value={formData.callbackUrl}
                   onChange={handleInputChange("callbackUrl")}
                   placeholder="https://example.com/callback"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
                 />
                 <Input
                   label="inputCurrency"
@@ -375,7 +389,9 @@ const App: React.FC = () => {
                   name="inputAmount"
                   value={formData.inputAmount}
                   onChange={handleInputChange("inputAmount")}
-                  placeholder="10"
+                  placeholder="10.5"
+                  inputMode="decimal"
+                  pattern="^\\d*(\\.\\d{0,6})?$"
                 />
                 <Input
                   label="paymentPlatform"
@@ -390,24 +406,30 @@ const App: React.FC = () => {
                   value={formData.amountUsdc}
                   onChange={handleInputChange("amountUsdc")}
                   placeholder="1000000 (6 decimals)"
+                  inputMode="numeric"
+                  pattern="^\\d+$"
                 />
                 <Input
                   label="toToken"
                   name="toToken"
                   value={formData.toToken}
                   onChange={handleInputChange("toToken")}
-                  placeholder="chainId:tokenAddress"
+                  placeholder="8453:0x0000...0000"
                 />
                 <Input
                   label="recipientAddress"
                   name="recipientAddress"
                   value={formData.recipientAddress}
                   onChange={handleInputChange("recipientAddress")}
-                  placeholder="0x..."
+                  placeholder="0x1234...abcd"
                 />
               </FormGrid>
 
-              {error && <ErrorMessage>{error}</ErrorMessage>}
+              {error && (
+                <ErrorMessage role="status" aria-live="polite">
+                  {error}
+                </ErrorMessage>
+              )}
 
               <CTARow>
                 <Button
@@ -437,31 +459,6 @@ const AppContainer = styled.div`
 
   @media (max-height: 800px) {
     padding: 32px 16px 48px;
-  }
-`;
-
-const Glow = styled.div`
-  position: absolute;
-  inset: auto;
-  width: 600px;
-  height: 600px;
-  top: -220px;
-  right: -180px;
-  background: ${gradients.ignite};
-  opacity: 0.16;
-  filter: blur(120px);
-  pointer-events: none;
-`;
-
-const NoiseLayer = styled.div`
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.25;
-
-  .noise-texture {
-    width: 100%;
-    height: 100%;
   }
 `;
 

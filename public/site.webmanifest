@@ -1,11 +1,11 @@
 {
-  "name": "Peer",
+  "name": "Peer Onramp Demo",
   "short_name": "Peer",
-  "description": "P2P exchange for fiat and crypto",
+  "description": "Peer onramp demo for the PeerAuth extension.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
-  "theme_color": "#FF3A33",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

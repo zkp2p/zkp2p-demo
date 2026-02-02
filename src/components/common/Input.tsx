@@ -1,9 +1,10 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, type InputHTMLAttributes } from "react";
 import styled from "styled-components";
 import { fontSizes, fontWeights } from "@zkp2p/brand";
 import { peer, radii, fontFamilies, lineHeights, letterSpacing } from "@theme/colors";
 
-interface InputProps {
+interface InputProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value" | "name" | "type"> {
   label: string;
   name: string;
   value?: string;
@@ -21,7 +22,11 @@ export const Input: React.FC<InputProps> = ({
   placeholder,
   type = "text",
   readOnly = false,
+  autoComplete,
+  spellCheck,
+  ...inputProps
 }: InputProps) => {
+  const resolvedAutoComplete = autoComplete ?? "off";
   return (
     <Container>
       <LabelAndInputContainer>
@@ -35,8 +40,9 @@ export const Input: React.FC<InputProps> = ({
             value={value}
             onChange={onChange}
             readOnly={readOnly}
-            spellCheck="false"
-            autoComplete="off"
+            spellCheck={spellCheck ?? false}
+            autoComplete={resolvedAutoComplete}
+            {...inputProps}
           />
         </InputWrapper>
       </LabelAndInputContainer>
@@ -50,12 +56,13 @@ const Container = styled.div`
   justify-content: space-between;
   padding: 16px;
   border-radius: ${radii.md}px;
-  border: 1px solid transparent;
+  border: 1px solid ${peer.borderDark};
   background-color: ${peer.black};
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus-within {
-    border-color: transparent;
+    border-color: ${peer.white};
+    box-shadow: 0 0 0 1px ${peer.white}33;
   }
 `;
 
@@ -100,6 +107,11 @@ const StyledInput = styled.input<{ readOnly?: boolean }>`
   &:focus {
     box-shadow: none;
     outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${peer.igniteYellow};
+    outline-offset: 2px;
   }
 
   &::placeholder {
