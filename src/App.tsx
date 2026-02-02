@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { ThemeProvider } from "styled-components";
 import theme from "@theme/index";
-import { colors, peer, gradients, radii, fontSizes } from "@theme/colors";
-import { ThemedText, PeerText } from "@theme/text";
+import { peer, gradients, radii, fontSizes, fontFamilies, fontWeights } from "@theme/colors";
+import { PeerText } from "@theme/text";
 import { Column, ColumnCenter } from "@components/layouts/Column";
 import Row from "@components/layouts/Row";
 import { Input } from "@components/common/Input";
@@ -300,10 +300,10 @@ const App: React.FC = () => {
                 PEERAUTH <GradientText>ONRAMP</GradientText> DEMO
               </PeerText.H2>
             </TitleRow>
-            <ThemedText.BodySecondary style={{ textAlign: "center", maxWidth: "640px" }}>
+            <PeerText.BodySecondary style={{ textAlign: "center", maxWidth: "640px" }}>
               A branded reference flow for integrating ZKP2P with the PeerAuth extension.
               Use the presets or customize query parameters to launch the onramp.
-            </ThemedText.BodySecondary>
+            </PeerText.BodySecondary>
           </HeaderSection>
 
           <Panel>
@@ -525,13 +525,13 @@ const SectionHeader = styled(Row)`
 const SectionRule = styled.div`
   flex: 1;
   height: 1px;
-  background: ${colors.defaultBorderColor};
+  background: ${peer.borderDark};
 `;
 
 const Divider = styled.hr`
   width: 100%;
   border: none;
-  border-top: 1px solid ${colors.defaultBorderColor};
+  border-top: 1px solid ${peer.borderDark};
   margin: 4px 0;
 `;
 
@@ -561,12 +561,14 @@ const CTARow = styled(Row)`
 `;
 
 const ErrorMessage = styled.div`
-  color: ${colors.warningRed};
+  color: ${peer.error};
   font-size: ${fontSizes.bodySmall}px;
+  font-family: ${fontFamilies.body};
+  font-weight: ${fontWeights.medium};
   padding: 12px;
-  background-color: ${colors.warningRed}20;
+  background-color: ${peer.error}20;
   border-radius: ${radii.md}px;
-  border: 1px solid ${colors.warningRed}40;
+  border: 1px solid ${peer.error}40;
 `;
 
 export default App;

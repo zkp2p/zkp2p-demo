@@ -7,7 +7,7 @@ import {
   fontWeights,
   fontSizes,
   letterSpacing,
-  transitions,
+  buttonSizes,
 } from "@theme/colors";
 
 export const Button = styled.button<{
@@ -18,8 +18,8 @@ export const Button = styled.button<{
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 20px;
-  min-height: 44px;
+  padding: 12px 24px;
+  min-height: ${buttonSizes.md}px;
   border-radius: ${radii.md}px;
   font-family: ${fontFamilies.body};
   font-size: ${fontSizes.button}px;
@@ -28,18 +28,20 @@ export const Button = styled.button<{
   text-transform: uppercase;
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
   border: none;
-  transition: ${transitions.background};
-  overflow: hidden;
+  transition: transform 0.15s ease, filter 0.15s ease;
 
   ${({ variant = "primary" }) => {
     if (variant === "secondary") {
       return css`
         background: ${peer.white};
         color: ${peer.black};
-        border: 1px solid transparent;
 
         &:hover:not([disabled]) {
           background: ${peer.lightGrey};
+        }
+
+        &:active:not([disabled]) {
+          transform: scale(0.98);
         }
       `;
     }
@@ -52,32 +54,27 @@ export const Button = styled.button<{
 
         &:hover:not([disabled]) {
           background: ${peer.black};
+          border-color: ${peer.textSecondary};
+        }
+
+        &:active:not([disabled]) {
+          transform: scale(0.98);
         }
       `;
     }
 
+    // Primary variant - IGNITE gradient
     return css`
       background: ${gradients.ignite};
       color: ${peer.black};
-      border: none;
 
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: ${gradients.igniteHover};
-        opacity: 0;
-        transition: opacity 0.25s ease-out;
-        border-radius: inherit;
-        pointer-events: none;
-      }
-
-      &:hover:not([disabled])::before {
-        opacity: 1;
+      &:hover:not([disabled]) {
+        filter: brightness(1.1);
       }
 
       &:active:not([disabled]) {
         transform: scale(0.98);
+        filter: brightness(0.95);
       }
     `;
   }}
@@ -85,8 +82,8 @@ export const Button = styled.button<{
   ${({ disabled }) =>
     disabled &&
     css`
-      opacity: 0.6;
-      pointer-events: none;
+      opacity: 0.5;
+      cursor: not-allowed;
     `}
 `;
 
