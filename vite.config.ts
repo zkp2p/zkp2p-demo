@@ -21,6 +21,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    allowedHosts: [".tail4a886f.ts.net"],
   },
   build: {
     outDir: 'build',

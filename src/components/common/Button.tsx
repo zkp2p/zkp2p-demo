@@ -30,23 +30,32 @@ export const Button = styled.button<{
   line-height: 1;
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
   border: none;
+  touch-action: manipulation;
   transition: ${transitions.background}, transform 0.15s ease, border-color 0.2s ease,
     color 0.2s ease;
+
+  &:focus-visible {
+    outline: 2px solid ${peer.igniteYellow};
+    outline-offset: 2px;
+  }
 
   ${({ variant = "primary" }) => {
     if (variant === "secondary") {
       return css`
-        background: transparent;
-        color: ${peer.white};
+        background: ${peer.white};
+        color: ${peer.black};
         border: 1px solid ${peer.white};
 
         &:hover:not([disabled]) {
+          background: ${peer.lightGrey};
           border-color: ${peer.lightGrey};
-          color: ${peer.lightGrey};
+          color: ${peer.black};
         }
 
         &:active:not([disabled]) {
           transform: scale(0.98);
+          background: ${peer.white};
+          color: ${peer.black};
         }
       `;
     }
@@ -73,11 +82,13 @@ export const Button = styled.button<{
 
       &:hover:not([disabled]) {
         background: ${gradients.igniteHover};
+        color: ${peer.black};
       }
 
       &:active:not([disabled]) {
         transform: scale(0.98);
         background: ${gradients.ignite};
+        color: ${peer.black};
       }
     `;
   }}
@@ -88,6 +99,14 @@ export const Button = styled.button<{
       opacity: 0.5;
       cursor: not-allowed;
     `}
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:active:not([disabled]) {
+      transform: none;
+    }
+  }
 `;
 
 export const ButtonRow = styled.div`

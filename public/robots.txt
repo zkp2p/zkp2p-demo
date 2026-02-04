@@ -1,0 +1,25 @@
+# Allow all crawlers
+User-agent: *
+Disallow:
+
+# Explicitly allow AI search engines
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Sitemap location
+Sitemap: https://peer.xyz/sitemap.xml
