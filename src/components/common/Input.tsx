@@ -60,10 +60,6 @@ const Container = styled.div`
   background-color: ${peer.black};
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-  &:focus-within {
-    border-color: ${peer.white};
-    box-shadow: 0 0 0 1px ${peer.white}33;
-  }
 `;
 
 const LabelAndInputContainer = styled.div`
@@ -107,11 +103,6 @@ const StyledInput = styled.input<{ readOnly?: boolean }>`
   &:focus {
     box-shadow: none;
     outline: none;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${peer.igniteYellow};
-    outline-offset: 2px;
   }
 
   &::placeholder {
