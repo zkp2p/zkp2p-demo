@@ -105,11 +105,6 @@ const StyledInput = styled.input<{ readOnly?: boolean }>`
     outline: none;
   }
 
-  &:focus-visible {
-    outline: 2px solid ${peer.igniteYellow};
-    outline-offset: 2px;
-  }
-
   &::placeholder {
     color: ${peer.textPlaceholder};
   }
