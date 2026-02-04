@@ -62,7 +62,7 @@ const Container = styled.div`
 
   &:focus-within {
     border-color: ${peer.white};
-    box-shadow: 0 0 0 1px ${peer.white}33;
+    box-shadow: none;
   }
 `;
 
