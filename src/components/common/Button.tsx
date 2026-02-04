@@ -8,7 +8,6 @@ import {
   fontSizes,
   letterSpacing,
   buttonSizes,
-  transitions,
 } from "@theme/colors";
 
 export const Button = styled.button<{
@@ -31,8 +30,8 @@ export const Button = styled.button<{
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
   border: none;
   touch-action: manipulation;
-  transition: ${transitions.background}, transform 0.15s ease, border-color 0.2s ease,
-    color 0.2s ease;
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 
   &:focus-visible {
     outline: 2px solid ${peer.igniteYellow};
