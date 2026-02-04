@@ -60,10 +60,6 @@ const Container = styled.div`
   background-color: ${peer.black};
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-  &:focus-within {
-    border-color: ${peer.white};
-    box-shadow: none;
-  }
 `;
 
 const LabelAndInputContainer = styled.div`
