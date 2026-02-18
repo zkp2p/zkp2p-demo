@@ -25,5 +25,3 @@ export const AutoColumn = styled.div<{
   justify-items: ${({ justify }) => justify ?? 'stretch'};
   flex-grow: ${({ grow }) => (grow ? 1 : 0)};
 `;
-
-export default Column

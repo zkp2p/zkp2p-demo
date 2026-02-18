@@ -135,5 +135,3 @@ export function Logo({
 
   return imgElement;
 }
-
-export default Logo;

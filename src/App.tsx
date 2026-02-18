@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useReducer, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { ThemeProvider } from "styled-components";
 import theme from "@theme/index";
-import { peer, gradients, radii, fontSizes, fontFamilies, fontWeights } from "@theme/colors";
+import { peer, radii, fontSizes, fontFamilies, fontWeights } from "@theme/colors";
 import { PeerText } from "@theme/text";
 import { Column, ColumnCenter } from "@components/layouts/Column";
 import Row from "@components/layouts/Row";
@@ -10,7 +10,7 @@ import { Input } from "@components/common/Input";
 import { Button, ButtonRow } from "@components/common/Button";
 import { peerExtensionSdk } from "@zkp2p/sdk";
 import type { PeerConnectionStatus, PeerExtensionOnrampParams } from "@zkp2p/sdk";
-import { BackgroundNoise, GradientText, Logo } from "@zkp2p/brand/components";
+import { GradientText, Logo } from "@zkp2p/brand/components";
 
 interface FormData {
   referrer: string;
@@ -97,6 +97,215 @@ const examples: Record<string, FormData> = {
   },
 };
 
+// ─── Connection state reducer ───────────────────────────────────────────────
+
+interface ConnectionState {
+  extensionStatus: "checking" | "installed" | "not_installed";
+  isConnecting: boolean;
+  connectionStatus: PeerConnectionStatus | "";
+  error: string | null;
+}
+
+type ConnectionAction =
+  | { type: "extension_installed" }
+  | { type: "extension_not_installed" }
+  | { type: "connection_status"; status: PeerConnectionStatus | "" }
+  | { type: "connecting" }
+  | { type: "connected" }
+  | { type: "error"; message: string }
+  | { type: "clear_error" };
+
+const initialConnectionState: ConnectionState = {
+  extensionStatus: "checking",
+  isConnecting: false,
+  connectionStatus: "",
+  error: null,
+};
+
+const connectionReducer = (state: ConnectionState, action: ConnectionAction): ConnectionState => {
+  switch (action.type) {
+    case "extension_installed":
+      return { ...state, extensionStatus: "installed" };
+    case "extension_not_installed":
+      return { ...state, extensionStatus: "not_installed" };
+    case "connection_status":
+      return { ...state, connectionStatus: action.status };
+    case "connecting":
+      return { ...state, isConnecting: true, error: null };
+    case "connected":
+      return { ...state, isConnecting: false };
+    case "error":
+      return { ...state, isConnecting: false, error: action.message };
+    case "clear_error":
+      return { ...state, error: null };
+  }
+};
+
+// ─── Sub-components ─────────────────────────────────────────────────────────
+
+const Header: React.FC = () => (
+  <HeaderSection>
+    <LogoRow>
+      <Logo height={28} variant="white" alt="Peer" />
+    </LogoRow>
+    <TitleRow>
+      <PeerText.H2 as="h1">
+        PEERAUTH <GradientText>ONRAMP</GradientText> DEMO
+      </PeerText.H2>
+    </TitleRow>
+    <PeerText.BodySecondary style={{ textAlign: "center", maxWidth: "640px" }}>
+      A branded reference flow for integrating ZKP2P with the PeerAuth extension.
+      Use the presets or customize query parameters to launch the onramp.
+    </PeerText.BodySecondary>
+  </HeaderSection>
+);
+
+const ExamplePresets: React.FC<{ onSelect: (key: string) => void }> = ({ onSelect }) => (
+  <Section>
+    <SectionHeader>
+      <PeerText.Sub2>Examples</PeerText.Sub2>
+      <SectionRule />
+    </SectionHeader>
+    <ExampleButtons>
+      <Button variant="secondary" onClick={() => onSelect("baseEth")}>
+        Onramp to Base ETH
+      </Button>
+      <Button variant="secondary" onClick={() => onSelect("solana")}>
+        Onramp 10 USD to Solana
+      </Button>
+      <Button variant="secondary" onClick={() => onSelect("mainnetEth")}>
+        Onramp 10 EUR via Revolut
+      </Button>
+      <Button variant="secondary" onClick={() => onSelect("avalancheUsdc")}>
+        Onramp 10 USD to Avalanche USDC
+      </Button>
+      <Button variant="secondary" onClick={() => onSelect("hyperliquidUsdc")}>
+        Onramp 1000 USDC to Hyperliquid
+      </Button>
+      <Button variant="secondary" onClick={() => onSelect("exactUsdc")}>
+        Onramp Exact 1 USDC
+      </Button>
+    </ExampleButtons>
+  </Section>
+);
+
+interface QueryFormProps {
+  formData: FormData;
+  onInputChange: (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error: string | null;
+  buttonText: string;
+  buttonDisabled: boolean;
+  onSubmit: () => void;
+}
+
+const QueryForm: React.FC<QueryFormProps> = ({
+  formData,
+  onInputChange,
+  error,
+  buttonText,
+  buttonDisabled,
+  onSubmit,
+}) => (
+  <Section>
+    <SectionHeader>
+      <PeerText.Sub2>Query Parameters</PeerText.Sub2>
+      <SectionRule />
+    </SectionHeader>
+    <FormGrid>
+      <Input
+        label="referrer"
+        name="referrer"
+        value={formData.referrer}
+        onChange={onInputChange("referrer")}
+        placeholder="Acme Wallet"
+      />
+      <Input
+        label="referrerLogo"
+        name="referrerLogo"
+        value={formData.referrerLogo}
+        onChange={onInputChange("referrerLogo")}
+        placeholder="https://example.com/logo.svg"
+        type="url"
+        inputMode="url"
+        autoComplete="url"
+      />
+      <Input
+        label="callbackUrl"
+        name="callbackUrl"
+        value={formData.callbackUrl}
+        onChange={onInputChange("callbackUrl")}
+        placeholder="https://example.com/callback"
+        type="url"
+        inputMode="url"
+        autoComplete="url"
+      />
+      <Input
+        label="inputCurrency"
+        name="inputCurrency"
+        value={formData.inputCurrency}
+        onChange={onInputChange("inputCurrency")}
+        placeholder="USD, EUR, etc."
+      />
+      <Input
+        label="inputAmount"
+        name="inputAmount"
+        value={formData.inputAmount}
+        onChange={onInputChange("inputAmount")}
+        placeholder="10.5"
+        inputMode="decimal"
+        pattern="^\\d*(\\.\\d{0,6})?$"
+      />
+      <Input
+        label="paymentPlatform"
+        name="paymentPlatform"
+        value={formData.paymentPlatform}
+        onChange={onInputChange("paymentPlatform")}
+        placeholder="venmo, revolut, etc."
+      />
+      <Input
+        label="amountUsdc"
+        name="amountUsdc"
+        value={formData.amountUsdc}
+        onChange={onInputChange("amountUsdc")}
+        placeholder="1000000 (6 decimals)"
+        inputMode="numeric"
+        pattern="^\\d+$"
+      />
+      <Input
+        label="toToken"
+        name="toToken"
+        value={formData.toToken}
+        onChange={onInputChange("toToken")}
+        placeholder="8453:0x0000...0000"
+      />
+      <Input
+        label="recipientAddress"
+        name="recipientAddress"
+        value={formData.recipientAddress}
+        onChange={onInputChange("recipientAddress")}
+        placeholder="0x1234...abcd"
+      />
+    </FormGrid>
+
+    {error && (
+      <ErrorMessage role="status" aria-live="polite">
+        {error}
+      </ErrorMessage>
+    )}
+
+    <CTARow>
+      <Button
+        onClick={onSubmit}
+        disabled={buttonDisabled}
+      >
+        {buttonText}
+      </Button>
+    </CTARow>
+  </Section>
+);
+
+// ─── Main App ───────────────────────────────────────────────────────────────
+
 const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     referrer: "",
@@ -110,12 +319,7 @@ const App: React.FC = () => {
     recipientAddress: "",
   });
 
-  const [extensionStatus, setExtensionStatus] = useState<
-    "checking" | "installed" | "not_installed"
-  >("checking");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<PeerConnectionStatus | "">("");
-  const [error, setError] = useState<string | null>(null);
+  const [conn, dispatch] = useReducer(connectionReducer, initialConnectionState);
 
   // Check if PeerAuth extension is installed
   useEffect(() => {
@@ -130,7 +334,7 @@ const App: React.FC = () => {
         const state = await peerExtensionSdk.getState();
         if (!isActive) return;
         if (state !== "needs_install") {
-          setExtensionStatus("installed");
+          dispatch({ type: "extension_installed" });
           return;
         }
       } catch {
@@ -138,14 +342,13 @@ const App: React.FC = () => {
       }
 
       if (attempts >= maxAttempts) {
-        setExtensionStatus("not_installed");
+        dispatch({ type: "extension_not_installed" });
         return;
       }
 
       timer = setTimeout(checkExtension, 500);
     };
 
-    // Give some time for extension to inject
     timer = setTimeout(checkExtension, 500);
     return () => {
       isActive = false;
@@ -155,8 +358,8 @@ const App: React.FC = () => {
 
   // Poll connection status while the extension is available
   useEffect(() => {
-    if (extensionStatus !== "installed") {
-      setConnectionStatus((prev) => (prev === "" ? prev : ""));
+    if (conn.extensionStatus !== "installed") {
+      dispatch({ type: "connection_status", status: "" });
       return;
     }
 
@@ -165,11 +368,11 @@ const App: React.FC = () => {
       try {
         const status = await peerExtensionSdk.checkConnectionStatus();
         if (isActive) {
-          setConnectionStatus((prev) => (prev === (status ?? "") ? prev : (status ?? "")));
+          dispatch({ type: "connection_status", status: status ?? "" });
         }
       } catch {
         if (isActive) {
-          setConnectionStatus((prev) => (prev === "" ? prev : ""));
+          dispatch({ type: "connection_status", status: "" });
         }
       }
     };
@@ -180,7 +383,7 @@ const App: React.FC = () => {
       isActive = false;
       clearInterval(interval);
     };
-  }, [extensionStatus]);
+  }, [conn.extensionStatus]);
 
   const handleInputChange = useCallback(
     (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,7 +399,6 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Build onramp params from form data
   const buildOnrampParams = useCallback((): PeerExtensionOnrampParams => {
     const params: PeerExtensionOnrampParams = {};
     const setParam = <K extends keyof PeerExtensionOnrampParams>(
@@ -228,7 +430,7 @@ const App: React.FC = () => {
 
     while (Date.now() - start < timeoutMs) {
       const status = await peerExtensionSdk.checkConnectionStatus();
-      setConnectionStatus((prev) => (prev === (status ?? "") ? prev : (status ?? "")));
+      dispatch({ type: "connection_status", status: status ?? "" });
       if (isConnectedStatus(status ?? "")) {
         return true;
       }
@@ -238,25 +440,23 @@ const App: React.FC = () => {
     return false;
   }, []);
 
-  // Handle the onramp flow with PeerAuth extension
   const handleOnramp = useCallback(async () => {
-    setError(null);
+    dispatch({ type: "clear_error" });
 
-    // Check if extension is installed
     if (!peerExtensionSdk.isAvailable()) {
       peerExtensionSdk.openInstallPage();
       return;
     }
 
-    setIsConnecting(true);
+    dispatch({ type: "connecting" });
 
     try {
       let status: PeerConnectionStatus | "" = "";
       try {
         status = await peerExtensionSdk.checkConnectionStatus();
-        setConnectionStatus(status ?? "");
+        dispatch({ type: "connection_status", status: status ?? "" });
       } catch {
-        setConnectionStatus("");
+        dispatch({ type: "connection_status", status: "" });
       }
       const isPending = status === "pending";
       const alreadyConnected = isConnectedStatus(status ?? "");
@@ -264,34 +464,32 @@ const App: React.FC = () => {
       if (!alreadyConnected && !isPending) {
         const approved = await peerExtensionSdk.requestConnection();
         if (!approved) {
-          setError("Connection was rejected. Please approve the request.");
+          dispatch({ type: "error", message: "Connection was rejected. Please approve the request." });
           return;
         }
       }
 
       const connected = alreadyConnected || (await waitForConnection());
       if (!connected) {
-        setError("Connection is still pending. Please approve the extension request and try again.");
+        dispatch({ type: "error", message: "Connection is still pending. Please approve the extension request and try again." });
         return;
       }
 
-      // Call onramp with query params
       const params = buildOnrampParams();
       peerExtensionSdk.onramp(params);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect to PeerAuth");
+      dispatch({ type: "error", message: err instanceof Error ? err.message : "Failed to connect to PeerAuth" });
     } finally {
-      setIsConnecting(false);
+      dispatch({ type: "connected" });
     }
   }, [buildOnrampParams, waitForConnection]);
 
-  // Get button text based on state
   const getButtonText = () => {
-    if (extensionStatus === "checking") return "Checking extension";
-    if (extensionStatus === "not_installed") return "Install PeerAuth Extension";
-    if (isConnecting) return "Connecting";
-    if (connectionStatus === "pending") return "Awaiting Approval";
-    if (isConnectedStatus(connectionStatus)) return "Onramp with Peer";
+    if (conn.extensionStatus === "checking") return "Checking extension";
+    if (conn.extensionStatus === "not_installed") return "Install PeerAuth Extension";
+    if (conn.isConnecting) return "Connecting";
+    if (conn.connectionStatus === "pending") return "Awaiting Approval";
+    if (isConnectedStatus(conn.connectionStatus)) return "Onramp with Peer";
     return "Connect & Onramp";
   };
 
@@ -299,147 +497,21 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <AppContainer>
         <ContentWrapper>
-          <HeaderSection>
-            <LogoRow>
-              <Logo height={28} variant="white" alt="Peer" />
-            </LogoRow>
-            <TitleRow>
-              <PeerText.H2 as="h1">
-                PEERAUTH <GradientText>ONRAMP</GradientText> DEMO
-              </PeerText.H2>
-            </TitleRow>
-            <PeerText.BodySecondary style={{ textAlign: "center", maxWidth: "640px" }}>
-              A branded reference flow for integrating ZKP2P with the PeerAuth extension.
-              Use the presets or customize query parameters to launch the onramp.
-            </PeerText.BodySecondary>
-          </HeaderSection>
+          <Header />
 
           <Panel>
-            <Section>
-              <SectionHeader>
-                <PeerText.Sub2>Examples</PeerText.Sub2>
-                <SectionRule />
-              </SectionHeader>
-              <ExampleButtons>
-                <Button variant="secondary" onClick={() => setExample("baseEth")}>
-                  Onramp to Base ETH
-                </Button>
-                <Button variant="secondary" onClick={() => setExample("solana")}>
-                  Onramp 10 USD to Solana
-                </Button>
-                <Button variant="secondary" onClick={() => setExample("mainnetEth")}>
-                  Onramp 10 EUR via Revolut
-                </Button>
-                <Button variant="secondary" onClick={() => setExample("avalancheUsdc")}>
-                  Onramp 10 USD to Avalanche USDC
-                </Button>
-                <Button variant="secondary" onClick={() => setExample("hyperliquidUsdc")}>
-                  Onramp 1000 USDC to Hyperliquid
-                </Button>
-                <Button variant="secondary" onClick={() => setExample("exactUsdc")}>
-                  Onramp Exact 1 USDC
-                </Button>
-              </ExampleButtons>
-            </Section>
+            <ExamplePresets onSelect={setExample} />
 
             <Divider />
 
-            <Section>
-              <SectionHeader>
-                <PeerText.Sub2>Query Parameters</PeerText.Sub2>
-                <SectionRule />
-              </SectionHeader>
-              <FormGrid>
-                <Input
-                  label="referrer"
-                  name="referrer"
-                  value={formData.referrer}
-                  onChange={handleInputChange("referrer")}
-                  placeholder="Acme Wallet"
-                />
-                <Input
-                  label="referrerLogo"
-                  name="referrerLogo"
-                  value={formData.referrerLogo}
-                  onChange={handleInputChange("referrerLogo")}
-                  placeholder="https://example.com/logo.svg"
-                  type="url"
-                  inputMode="url"
-                  autoComplete="url"
-                />
-                <Input
-                  label="callbackUrl"
-                  name="callbackUrl"
-                  value={formData.callbackUrl}
-                  onChange={handleInputChange("callbackUrl")}
-                  placeholder="https://example.com/callback"
-                  type="url"
-                  inputMode="url"
-                  autoComplete="url"
-                />
-                <Input
-                  label="inputCurrency"
-                  name="inputCurrency"
-                  value={formData.inputCurrency}
-                  onChange={handleInputChange("inputCurrency")}
-                  placeholder="USD, EUR, etc."
-                />
-                <Input
-                  label="inputAmount"
-                  name="inputAmount"
-                  value={formData.inputAmount}
-                  onChange={handleInputChange("inputAmount")}
-                  placeholder="10.5"
-                  inputMode="decimal"
-                  pattern="^\\d*(\\.\\d{0,6})?$"
-                />
-                <Input
-                  label="paymentPlatform"
-                  name="paymentPlatform"
-                  value={formData.paymentPlatform}
-                  onChange={handleInputChange("paymentPlatform")}
-                  placeholder="venmo, revolut, etc."
-                />
-                <Input
-                  label="amountUsdc"
-                  name="amountUsdc"
-                  value={formData.amountUsdc}
-                  onChange={handleInputChange("amountUsdc")}
-                  placeholder="1000000 (6 decimals)"
-                  inputMode="numeric"
-                  pattern="^\\d+$"
-                />
-                <Input
-                  label="toToken"
-                  name="toToken"
-                  value={formData.toToken}
-                  onChange={handleInputChange("toToken")}
-                  placeholder="8453:0x0000...0000"
-                />
-                <Input
-                  label="recipientAddress"
-                  name="recipientAddress"
-                  value={formData.recipientAddress}
-                  onChange={handleInputChange("recipientAddress")}
-                  placeholder="0x1234...abcd"
-                />
-              </FormGrid>
-
-              {error && (
-                <ErrorMessage role="status" aria-live="polite">
-                  {error}
-                </ErrorMessage>
-              )}
-
-              <CTARow>
-                <Button
-                  onClick={handleOnramp}
-                  disabled={extensionStatus === "checking" || isConnecting}
-                >
-                  {getButtonText()}
-                </Button>
-              </CTARow>
-            </Section>
+            <QueryForm
+              formData={formData}
+              onInputChange={handleInputChange}
+              error={conn.error}
+              buttonText={getButtonText()}
+              buttonDisabled={conn.extensionStatus === "checking" || conn.isConnecting}
+              onSubmit={handleOnramp}
+            />
           </Panel>
         </ContentWrapper>
       </AppContainer>
@@ -447,7 +519,8 @@ const App: React.FC = () => {
   );
 };
 
-// Styled Components
+// ─── Styled Components ──────────────────────────────────────────────────────
+
 const AppContainer = styled.div`
   min-height: 100dvh;
   background-color: ${peer.black};

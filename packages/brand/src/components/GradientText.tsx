@@ -160,11 +160,9 @@ export function GradientText({
   const prefersReducedMotion = usePrefersReducedMotion();
   const shouldAnimate = animate && !prefersReducedMotion;
 
-  useEffect(() => {
-    if (shouldAnimate) {
-      ensureGradientShiftKeyframes();
-    }
-  }, [shouldAnimate]);
+  if (shouldAnimate) {
+    ensureGradientShiftKeyframes();
+  }
 
   const combinedStyles: CSSProperties = {
     ...baseStyles,
@@ -180,4 +178,3 @@ export function GradientText({
   );
 }
 
-export default GradientText;

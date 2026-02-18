@@ -1,6 +1,4 @@
 import {
-  useEffect,
-  useState,
   type CSSProperties,
   type HTMLAttributes,
 } from "react";
@@ -112,11 +110,7 @@ export function Icon({
     restProps.role ?? (hasAccessibleName ? "img" : "presentation");
   const resolvedAriaHidden =
     restProps["aria-hidden"] ?? (hasAccessibleName ? undefined : true);
-  const [useMask, setUseMask] = useState(true);
-
-  useEffect(() => {
-    setUseMask(supportsMasking());
-  }, []);
+  const useMask = supportsMasking();
 
   if (!useMask) {
     return (
@@ -174,4 +168,3 @@ export function Icon({
 export { peerIconNames };
 export type { PeerIconName };
 
-export default Icon;
