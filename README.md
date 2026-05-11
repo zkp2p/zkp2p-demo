@@ -52,7 +52,6 @@ This project is configured for deployment on Vercel. Push to `main` branch to tr
 | inputCurrency | Fiat currency (USD, EUR, etc.) |
 | inputAmount | Amount in fiat currency |
 | paymentPlatform | Payment method (venmo, revolut, etc.) |
-| amountUsdc | Exact USDC amount (6 decimals) |
 | toToken | Target token (format: chainId:tokenAddress) |
 | recipientAddress | Destination wallet address |
 
