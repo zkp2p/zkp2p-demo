@@ -19,7 +19,6 @@ interface FormData {
   inputCurrency: string;
   inputAmount: string;
   paymentPlatform: string;
-  amountUsdc: string;
   toToken: string;
   recipientAddress: string;
 }
@@ -36,7 +35,6 @@ const examples: Record<string, FormData> = {
     inputCurrency: "",
     inputAmount: "",
     paymentPlatform: "",
-    amountUsdc: "",
     toToken: "8453:0x0000000000000000000000000000000000000000",
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929",
   },
@@ -47,7 +45,6 @@ const examples: Record<string, FormData> = {
     inputCurrency: "USD",
     inputAmount: "10",
     paymentPlatform: "",
-    amountUsdc: "",
     toToken: "792703809:11111111111111111111111111111111",
     recipientAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
   },
@@ -58,7 +55,6 @@ const examples: Record<string, FormData> = {
     inputCurrency: "EUR",
     inputAmount: "10",
     paymentPlatform: "revolut",
-    amountUsdc: "",
     toToken: "1:0x0000000000000000000000000000000000000000",
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929",
   },
@@ -69,7 +65,6 @@ const examples: Record<string, FormData> = {
     inputCurrency: "USD",
     inputAmount: "10",
     paymentPlatform: "",
-    amountUsdc: "",
     toToken: "43114:0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929",
   },
@@ -80,19 +75,7 @@ const examples: Record<string, FormData> = {
     inputCurrency: "USD",
     inputAmount: "1000",
     paymentPlatform: "",
-    amountUsdc: "",
     toToken: "1337:0x00000000000000000000000000000000",
-    recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929",
-  },
-  exactUsdc: {
-    referrer: "Peer Demo Wallet",
-    referrerLogo: "https://demo.zkp2p.xyz/peer-profile.png",
-    callbackUrl: "https://demo.zkp2p.xyz",
-    inputCurrency: "",
-    inputAmount: "",
-    paymentPlatform: "",
-    amountUsdc: "1000000",
-    toToken: "",
     recipientAddress: "0x84e113087C97Cd80eA9D78983D4B8Ff61ECa1929",
   },
 };
@@ -182,9 +165,6 @@ const ExamplePresets: React.FC<{ onSelect: (key: string) => void }> = ({ onSelec
       <Button variant="secondary" onClick={() => onSelect("hyperliquidUsdc")}>
         Onramp 1000 USDC to Hyperliquid
       </Button>
-      <Button variant="secondary" onClick={() => onSelect("exactUsdc")}>
-        Onramp Exact 1 USDC
-      </Button>
     </ExampleButtons>
   </Section>
 );
@@ -263,15 +243,6 @@ const QueryForm: React.FC<QueryFormProps> = ({
         placeholder="venmo, revolut, etc."
       />
       <Input
-        label="amountUsdc"
-        name="amountUsdc"
-        value={formData.amountUsdc}
-        onChange={onInputChange("amountUsdc")}
-        placeholder="1000000 (6 decimals)"
-        inputMode="numeric"
-        pattern="^\\d+$"
-      />
-      <Input
         label="toToken"
         name="toToken"
         value={formData.toToken}
@@ -314,7 +285,6 @@ const App: React.FC = () => {
     inputCurrency: "",
     inputAmount: "",
     paymentPlatform: "",
-    amountUsdc: "",
     toToken: "",
     recipientAddress: "",
   });
@@ -417,7 +387,6 @@ const App: React.FC = () => {
     setParam("inputCurrency", formData.inputCurrency);
     setParam("inputAmount", formData.inputAmount);
     setParam("paymentPlatform", formData.paymentPlatform);
-    setParam("amountUsdc", formData.amountUsdc);
     setParam("toToken", formData.toToken);
     setParam("recipientAddress", formData.recipientAddress);
 
